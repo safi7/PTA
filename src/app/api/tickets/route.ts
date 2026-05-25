@@ -4,6 +4,8 @@ import { createServerClient } from '@/lib/supabase/server';
 import { calculateDueAmount, calculateCommission } from '@/lib/helpers';
 import { logAudit } from '@/lib/helpers/audit';
 
+const PRICE_FIELDS = ['original_price', 'sold_price', 'paid_amount', 'due_amount', 'commission'];
+
 const createSchema = z.object({
   client_name: z.string().min(1).max(200),
   client_phone: z.string().max(50).nullable().optional(),
@@ -46,7 +48,31 @@ export async function GET(request: NextRequest) {
   const { data, error, count } = await query;
   if (error) return NextResponse.json({ error: 'Failed to fetch tickets' }, { status: 500 });
 
-  return NextResponse.json({ data, total: count ?? 0, page, pageSize });
+  // Determine which tickets on this page have price changes in audit_logs
+  const ticketIds = (data ?? []).map((t) => t.id);
+  const priceChangedIds = new Set<string>();
+
+  if (ticketIds.length > 0) {
+    const { data: logs } = await supabase
+      .from('audit_logs')
+      .select('entity_id, old_values, new_values')
+      .eq('entity_type', 'ticket')
+      .eq('action', 'UPDATE')
+      .in('entity_id', ticketIds);
+
+    for (const log of logs ?? []) {
+      if (priceChangedIds.has(log.entity_id)) continue;
+      const old = (log.old_values ?? {}) as Record<string, unknown>;
+      const next = (log.new_values ?? {}) as Record<string, unknown>;
+      if (PRICE_FIELDS.some((f) => Number(old[f] ?? 0) !== Number(next[f] ?? 0))) {
+        priceChangedIds.add(log.entity_id);
+      }
+    }
+  }
+
+  const tickets = (data ?? []).map((t) => ({ ...t, has_price_changes: priceChangedIds.has(t.id) }));
+
+  return NextResponse.json({ data: tickets, total: count ?? 0, page, pageSize });
 }
 
 export async function POST(request: NextRequest) {

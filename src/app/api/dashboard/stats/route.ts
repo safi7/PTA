@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { getPeriodDates, percentChange } from '@/lib/helpers';
+import dayjs from 'dayjs';
 
 export async function GET(request: NextRequest) {
-  const period = new URL(request.url).searchParams.get('period') ?? 'today';
-  const { startDate, endDate, prevStartDate, prevEndDate } = getPeriodDates(period);
+  const searchParams = new URL(request.url).searchParams;
+  const period = searchParams.get('period') ?? 'today';
+
+  let startDate: string, endDate: string, prevStartDate: string, prevEndDate: string;
+
+  if (period === 'custom') {
+    const rawStart = searchParams.get('startDate');
+    const rawEnd = searchParams.get('endDate');
+    startDate = rawStart ? dayjs(rawStart).startOf('day').toISOString() : dayjs().startOf('day').toISOString();
+    endDate = rawEnd ? dayjs(rawEnd).endOf('day').toISOString() : dayjs().endOf('day').toISOString();
+    const rangeMs = dayjs(endDate).diff(dayjs(startDate));
+    prevEndDate = dayjs(startDate).toISOString();
+    prevStartDate = dayjs(startDate).subtract(rangeMs, 'ms').toISOString();
+  } else {
+    ({ startDate, endDate, prevStartDate, prevEndDate } = getPeriodDates(period));
+  }
+
   const supabase = createServerClient();
 
   const [curr, prev] = await Promise.all([

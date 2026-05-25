@@ -10,19 +10,26 @@ const DRAWER_WIDTH = 260;
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(true);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      <Header onMenuClick={() => setMobileOpen(true)} drawerOpen={mobileOpen} />
-      <Sidebar open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <Header
+        onMenuClick={() => setMobileOpen(true)}
+        drawerOpen={mobileOpen}
+        desktopSidebarOpen={desktopOpen}
+        onDesktopToggle={() => setDesktopOpen((prev) => !prev)}
+      />
+      <Sidebar open={mobileOpen} onClose={() => setMobileOpen(false)} desktopOpen={desktopOpen} />
 
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          width: { xs: '100%', md: desktopOpen ? `calc(100% - ${DRAWER_WIDTH}px)` : '100%' },
           minHeight: '100vh',
           backgroundColor: 'background.default',
+          transition: 'width 225ms cubic-bezier(0.4, 0, 0.6, 1)',
         }}
       >
         <Toolbar />

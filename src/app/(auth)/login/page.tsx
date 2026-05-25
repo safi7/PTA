@@ -17,7 +17,6 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 import { useAuthStore } from '@/stores/authStore';
-import type { Metadata } from 'next';
 
 export default function LoginPage() {
   const router = useRouter();

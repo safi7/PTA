@@ -147,7 +147,7 @@ export default function UsersPage() {
                 ))
               ) : users.map((u) => (
                 <TableRow key={u.id} hover>
-                  <TableCell fontWeight={500}>{u.full_name}</TableCell>
+                  <TableCell sx={{ fontWeight: 500 }}>{u.full_name}</TableCell>
                   <TableCell sx={{ fontFamily: 'monospace' }}>{u.username}</TableCell>
                   <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{u.email}</TableCell>
                   <TableCell>

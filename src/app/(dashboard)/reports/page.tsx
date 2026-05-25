@@ -17,7 +17,6 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableFooter from '@mui/material/TableFooter';
 import Skeleton from '@mui/material/Skeleton';
-import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -30,6 +29,9 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import DownloadIcon from '@mui/icons-material/Download';
+import Button from '@mui/material/Button';
+import { downloadCSV } from '@/lib/helpers/csv';
 
 export default function ReportsPage() {
   const [year, setYear] = useState(new Date().getFullYear());
@@ -73,14 +75,38 @@ export default function ReportsPage() {
         subtitle={`Detailed performance report for ${year}`}
         breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Reports' }]}
         actions={
-          <FormControl size="small" sx={{ minWidth: 100 }}>
-            <InputLabel>Year</InputLabel>
-            <Select value={year} label="Year" onChange={(e) => setYear(Number(e.target.value))}>
-              {availableYears.map((y) => (
-                <MenuItem key={y} value={y}>{y}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <FormControl size="small" sx={{ minWidth: 100 }}>
+              <InputLabel>Year</InputLabel>
+              <Select value={year} label="Year" onChange={(e) => setYear(Number(e.target.value))}>
+                {availableYears.map((y) => (
+                  <MenuItem key={y} value={y}>{y}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<DownloadIcon />}
+              disabled={loading || monthly.length === 0}
+              onClick={() =>
+                downloadCSV(
+                  monthly.map((m) => ({
+                    month: m.month,
+                    tickets: m.tickets,
+                    revenue: m.revenue,
+                    original_cost: m.originalCost,
+                    commission: m.commission,
+                    paid: m.paid,
+                    outstanding_due: m.due,
+                  })),
+                  `report-${year}.csv`
+                )
+              }
+            >
+              Export CSV
+            </Button>
+          </Box>
         }
       />
 
@@ -152,7 +178,7 @@ export default function ReportsPage() {
               ) : (
                 monthly.map((row) => (
                   <TableRow key={row.monthNum} hover sx={{ opacity: row.tickets === 0 ? 0.5 : 1 }}>
-                    <TableCell fontWeight={500}>{row.month}</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>{row.month}</TableCell>
                     <TableCell align="right">{row.tickets}</TableCell>
                     <TableCell align="right">{formatCurrency(row.revenue)}</TableCell>
                     <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{formatCurrency(row.originalCost)}</TableCell>

@@ -60,6 +60,7 @@ const navItems: NavItem[] = [
 interface Props {
   open: boolean;
   onClose: () => void;
+  desktopOpen: boolean;
 }
 
 function NavItems({ onClose }: { onClose: () => void }) {
@@ -165,7 +166,7 @@ function DrawerContent({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function Sidebar({ open, onClose }: Props) {
+export function Sidebar({ open, onClose, desktopOpen }: Props) {
   return (
     <>
       {/* Mobile drawer */}
@@ -182,22 +183,26 @@ export function Sidebar({ open, onClose }: Props) {
         <DrawerContent onClose={onClose} />
       </Drawer>
 
-      {/* Desktop permanent drawer */}
-      <Drawer
-        variant="permanent"
-        sx={{
-          display: { xs: 'none', md: 'block' },
-          '& .MuiDrawer-paper': {
+      {/* Desktop permanent drawer — conditionally rendered so flex layout adjusts */}
+      {desktopOpen && (
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: 'none', md: 'block' },
             width: DRAWER_WIDTH,
-            boxSizing: 'border-box',
-            borderRight: '1px solid',
-            borderColor: 'divider',
-          },
-        }}
-        open
-      >
-        <DrawerContent onClose={() => {}} />
-      </Drawer>
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: DRAWER_WIDTH,
+              boxSizing: 'border-box',
+              borderRight: '1px solid',
+              borderColor: 'divider',
+            },
+          }}
+          open
+        >
+          <DrawerContent onClose={() => {}} />
+        </Drawer>
+      )}
     </>
   );
 }

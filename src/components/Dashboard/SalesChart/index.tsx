@@ -56,8 +56,8 @@ export function SalesChart({ data, loading = false }: Props) {
               <YAxis tickFormatter={formatY} tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={false} />
               <Tooltip
                 formatter={(value: number, name: string) => [
-                  name === 'tickets' ? value : `$${value.toLocaleString()}`,
-                  name === 'revenue' ? 'Revenue' : name === 'commission' ? 'Commission' : 'Tickets',
+                  name === 'Tickets' ? String(value) : `$${value.toLocaleString()}`,
+                  name,
                 ]}
                 contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
               />

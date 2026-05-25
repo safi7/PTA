@@ -21,9 +21,11 @@ const DRAWER_WIDTH = 260;
 interface Props {
   onMenuClick: () => void;
   drawerOpen: boolean;
+  desktopSidebarOpen: boolean;
+  onDesktopToggle: () => void;
 }
 
-export function Header({ onMenuClick }: Props) {
+export function Header({ onMenuClick, desktopSidebarOpen, onDesktopToggle }: Props) {
   const { user, clearAuth } = useAuthStore();
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -49,15 +51,26 @@ export function Header({ onMenuClick }: Props) {
         borderBottom: '1px solid',
         borderColor: 'divider',
         color: 'text.primary',
-        width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-        ml: { md: `${DRAWER_WIDTH}px` },
+        width: { xs: '100%', md: desktopSidebarOpen ? `calc(100% - ${DRAWER_WIDTH}px)` : '100%' },
+        ml: { md: desktopSidebarOpen ? `${DRAWER_WIDTH}px` : 0 },
+        transition: 'width 225ms cubic-bezier(0.4, 0, 0.6, 1), margin-left 225ms cubic-bezier(0.4, 0, 0.6, 1)',
       }}
     >
       <Toolbar>
+        {/* Mobile: opens temporary drawer */}
         <IconButton
           onClick={onMenuClick}
           edge="start"
-          sx={{ mr: 2, display: { md: 'none' } }}
+          sx={{ mr: 1, display: { md: 'none' } }}
+        >
+          <MenuIcon />
+        </IconButton>
+
+        {/* Desktop: toggles permanent sidebar */}
+        <IconButton
+          onClick={onDesktopToggle}
+          edge="start"
+          sx={{ mr: 2, display: { xs: 'none', md: 'inline-flex' } }}
         >
           <MenuIcon />
         </IconButton>

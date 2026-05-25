@@ -5,7 +5,7 @@
 INSERT INTO users (username, email, full_name, password_hash, role)
 VALUES (
   'admin',
-  'admin@pta.local',
+  'admin@paktintravel.com',
   'System Administrator',
   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCXuYc5sOCzKRbAWj4GkDry', -- Admin@1234
   'super_admin'

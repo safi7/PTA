@@ -27,10 +27,15 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import DownloadIcon from '@mui/icons-material/Download';
+import UploadIcon from '@mui/icons-material/Upload';
+import PriceChangeIcon from '@mui/icons-material/PriceChange';
 import { PageHeader } from '@/components/PageHeader';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { PriceHistoryModal } from '@/components/Tickets/PriceHistoryModal';
 import type { Ticket } from '@/lib/types';
 import { formatCurrency, formatDate } from '@/lib/helpers';
+import { downloadCSV } from '@/lib/helpers/csv';
 
 const statusColors: Record<string, 'default' | 'warning' | 'success' | 'error'> = {
   pending: 'warning',
@@ -49,6 +54,8 @@ export default function TicketsPage() {
   const [error, setError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [priceHistoryTicket, setPriceHistoryTicket] = useState<{ id: string; number: string } | null>(null);
 
   const fetchTickets = useCallback(async () => {
     setLoading(true);
@@ -74,10 +81,7 @@ export default function TicketsPage() {
 
   useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
-  // Debounce search
-  useEffect(() => {
-    setPage(0);
-  }, [search, status]);
+  useEffect(() => { setPage(0); }, [search, status]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -94,6 +98,24 @@ export default function TicketsPage() {
     }
   };
 
+  const handleExport = async () => {
+    setExportLoading(true);
+    try {
+      const params = new URLSearchParams({ ...(search && { search }), ...(status && { status }) });
+      const res = await fetch(`/api/tickets/export?${params}`);
+      const json = await res.json();
+      if (json.data?.length) {
+        downloadCSV(json.data, `tickets-${new Date().toISOString().slice(0, 10)}.csv`);
+      } else {
+        setError('No tickets to export with the current filters.');
+      }
+    } catch {
+      setError('Failed to export tickets.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   return (
     <Box>
       <PageHeader
@@ -101,9 +123,29 @@ export default function TicketsPage() {
         subtitle={`${total} total tickets`}
         breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Tickets' }]}
         actions={
-          <Button component={NextLink} href="/tickets/add" variant="contained" startIcon={<AddIcon />}>
-            New Ticket
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              size="small"
+              onClick={handleExport}
+              disabled={exportLoading}
+            >
+              Export CSV
+            </Button>
+            <Button
+              component={NextLink}
+              href="/tickets/import"
+              variant="outlined"
+              startIcon={<UploadIcon />}
+              size="small"
+            >
+              Import CSV
+            </Button>
+            <Button component={NextLink} href="/tickets/add" variant="contained" startIcon={<AddIcon />}>
+              New Ticket
+            </Button>
+          </Box>
         }
       />
 
@@ -168,7 +210,23 @@ export default function TicketsPage() {
               ) : (
                 tickets.map((ticket) => (
                   <TableRow key={ticket.id} hover>
-                    <TableCell sx={{ fontFamily: 'monospace', fontSize: 12 }}>{ticket.ticket_number}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{ fontFamily: 'monospace', fontSize: 12 }}>{ticket.ticket_number}</Box>
+                        {ticket.has_price_changes && (
+                          <Tooltip title="Price was changed — click to view history">
+                            <IconButton
+                              size="small"
+                              color="warning"
+                              sx={{ p: 0.25 }}
+                              onClick={() => setPriceHistoryTicket({ id: ticket.id, number: ticket.ticket_number })}
+                            >
+                              <PriceChangeIcon sx={{ fontSize: 15 }} />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
+                    </TableCell>
                     <TableCell>
                       <Box>
                         <Box fontWeight={500}>{ticket.client_name}</Box>
@@ -236,6 +294,13 @@ export default function TicketsPage() {
         loading={deleteLoading}
         onConfirm={handleDelete}
         onCancel={() => setDeleteId(null)}
+      />
+
+      <PriceHistoryModal
+        open={Boolean(priceHistoryTicket)}
+        ticketId={priceHistoryTicket?.id ?? null}
+        ticketNumber={priceHistoryTicket?.number}
+        onClose={() => setPriceHistoryTicket(null)}
       />
     </Box>
   );

@@ -32,6 +32,14 @@ export interface Ticket {
   created_at: string;
   updated_at: string;
   creator?: Pick<User, 'id' | 'username' | 'full_name'>;
+  has_price_changes?: boolean;
+}
+
+export interface PriceChangeEntry {
+  id: string;
+  changed_at: string;
+  changed_by: { username: string; full_name: string } | null;
+  changes: { field: string; old: number; new: number }[];
 }
 
 export interface AuditLog {
@@ -92,4 +100,4 @@ export interface PaginatedResponse<T> {
   pageSize: number;
 }
 
-export type Period = 'today' | 'yesterday' | 'this_week' | 'this_month' | 'this_year';
+export type Period = 'today' | 'yesterday' | 'this_week' | 'this_month' | 'this_year' | 'custom';

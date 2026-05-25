@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     userAgent: request.headers.get('user-agent') ?? undefined,
   });
 
-  const token = signToken({ userId: user.id, username: user.username, role: user.role });
+  const token = await signToken({ userId: user.id, username: user.username, role: user.role });
 
   const res = NextResponse.json({
     data: { id: user.id, username: user.username, email: user.email, full_name: user.full_name, role: user.role },

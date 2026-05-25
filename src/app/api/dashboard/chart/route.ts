@@ -4,12 +4,25 @@ import { getPeriodDates } from '@/lib/helpers';
 import dayjs from 'dayjs';
 
 export async function GET(request: NextRequest) {
-  const period = new URL(request.url).searchParams.get('period') ?? 'today';
-  const { startDate, endDate } = getPeriodDates(period);
+  const searchParams = new URL(request.url).searchParams;
+  const period = searchParams.get('period') ?? 'today';
 
-  const groupBy: 'hour' | 'day' | 'month' =
-    period === 'today' || period === 'yesterday' ? 'hour' :
-    period === 'this_year' ? 'month' : 'day';
+  let startDate: string, endDate: string;
+  let groupBy: 'hour' | 'day' | 'month';
+
+  if (period === 'custom') {
+    const rawStart = searchParams.get('startDate');
+    const rawEnd = searchParams.get('endDate');
+    startDate = rawStart ?? dayjs().startOf('day').toISOString();
+    endDate = rawEnd ?? dayjs().endOf('day').toISOString();
+    const daysDiff = dayjs(endDate).diff(dayjs(startDate), 'day');
+    groupBy = daysDiff <= 1 ? 'hour' : daysDiff <= 90 ? 'day' : 'month';
+  } else {
+    ({ startDate, endDate } = getPeriodDates(period));
+    groupBy =
+      period === 'today' || period === 'yesterday' ? 'hour' :
+      period === 'this_year' ? 'month' : 'day';
+  }
 
   const supabase = createServerClient();
   const { data, error } = await supabase
