@@ -6,6 +6,7 @@ export interface User {
   role: 'admin' | 'super_admin';
   is_active: boolean;
   last_login_at: string | null;
+  backup_dismissed_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -16,6 +17,7 @@ export interface Ticket {
   client_name: string;
   client_phone: string | null;
   client_email: string | null;
+  client_address: string | null;
   from_location: string;
   to_location: string;
   departure_date: string;
@@ -101,3 +103,8 @@ export interface PaginatedResponse<T> {
 }
 
 export type Period = 'today' | 'yesterday' | 'this_week' | 'this_month' | 'this_year' | 'custom';
+
+export interface BackupStatus {
+  should_show: boolean;
+  last_backup_at: string | null;
+}

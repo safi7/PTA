@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -19,16 +19,26 @@ import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import { PageHeader } from '@/components/PageHeader';
+import { useAuthStore } from '@/stores/authStore';
+
+interface AdminOption {
+  id: string;
+  username: string;
+  full_name: string;
+}
 
 export default function AddTicketPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [admins, setAdmins] = useState<AdminOption[]>([]);
 
   const [form, setForm] = useState({
     client_name: '',
     client_phone: '',
     client_email: '',
+    client_address: '',
     from_location: '',
     to_location: '',
     departure_date: '',
@@ -39,12 +49,26 @@ export default function AddTicketPage() {
     paid_amount: '',
     status: 'pending' as 'pending' | 'paid' | 'cancelled',
     notes: '',
+    created_by: '',
   });
+
+  useEffect(() => {
+    fetch('/api/users/active')
+      .then((r) => r.json())
+      .then(({ data }) => {
+        if (Array.isArray(data)) {
+          setAdmins(data);
+          if (user?.id) {
+            setForm((prev) => ({ ...prev, created_by: user.id }));
+          }
+        }
+      })
+      .catch(() => {/* non-critical */});
+  }, [user?.id]);
 
   const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-  // Preview calculated fields
   const soldPrice = parseFloat(form.sold_price) || 0;
   const origPrice = parseFloat(form.original_price) || 0;
   const paidAmount = parseFloat(form.paid_amount) || 0;
@@ -61,6 +85,7 @@ export default function AddTicketPage() {
         client_name: form.client_name.trim(),
         client_phone: form.client_phone.trim() || null,
         client_email: form.client_email.trim() || null,
+        client_address: form.client_address.trim() || null,
         from_location: form.from_location.trim(),
         to_location: form.to_location.trim(),
         departure_date: form.departure_date,
@@ -71,6 +96,7 @@ export default function AddTicketPage() {
         paid_amount: parseFloat(form.paid_amount),
         status: form.status,
         notes: form.notes.trim() || null,
+        ...(form.created_by ? { created_by: form.created_by } : {}),
       };
 
       const res = await fetch('/api/tickets', {
@@ -120,6 +146,9 @@ export default function AddTicketPage() {
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <TextField label="Email" type="email" value={form.client_email} onChange={set('client_email')} fullWidth />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField label="Address (optional)" value={form.client_address} onChange={set('client_address')} fullWidth multiline rows={1} />
                   </Grid>
                 </Grid>
               </CardContent>
@@ -213,7 +242,7 @@ export default function AddTicketPage() {
             </Card>
           </Grid>
 
-          {/* Status & Notes */}
+          {/* Status, Booked By & Notes */}
           <Grid size={12}>
             <Card>
               <CardContent sx={{ p: 3 }}>
@@ -232,6 +261,24 @@ export default function AddTicketPage() {
                       </Select>
                     </FormControl>
                   </Grid>
+                  {admins.length > 0 && (
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <FormControl fullWidth>
+                        <InputLabel>Booked By</InputLabel>
+                        <Select
+                          value={form.created_by}
+                          label="Booked By"
+                          onChange={(e) => setForm((p) => ({ ...p, created_by: e.target.value }))}
+                        >
+                          {admins.map((a) => (
+                            <MenuItem key={a.id} value={a.id}>
+                              {a.full_name || a.username}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  )}
                   <Grid size={12}>
                     <TextField
                       label="Notes (optional)"

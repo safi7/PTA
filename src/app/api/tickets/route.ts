@@ -10,6 +10,7 @@ const createSchema = z.object({
   client_name: z.string().min(1).max(200),
   client_phone: z.string().max(50).nullable().optional(),
   client_email: z.string().email().max(200).nullable().optional(),
+  client_address: z.string().max(500).nullable().optional(),
   from_location: z.string().min(1).max(200),
   to_location: z.string().min(1).max(200),
   departure_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -20,6 +21,7 @@ const createSchema = z.object({
   paid_amount: z.number().min(0),
   status: z.enum(['pending', 'paid', 'cancelled']).default('pending'),
   notes: z.string().max(2000).nullable().optional(),
+  created_by: z.string().uuid().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
   }
 
-  const data = parsed.data;
+  const { created_by: createdByOverride, ...data } = parsed.data;
   const ticket_number = `PTA-${Date.now().toString().slice(-8)}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
 
   const supabase = createServerClient();
@@ -100,7 +102,7 @@ export async function POST(request: NextRequest) {
       ticket_number,
       due_amount: calculateDueAmount(data.sold_price, data.paid_amount),
       commission: calculateCommission(data.sold_price, data.original_price),
-      created_by: userId,
+      created_by: createdByOverride ?? userId,
     })
     .select()
     .single();

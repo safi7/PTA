@@ -24,6 +24,11 @@ export const navigationConfig: NavItem[] = [
     ],
   },
   {
+    label: 'Outstanding Dues',
+    path: '/dues',
+    icon: 'AccountBalanceWalletRounded' as unknown as ElementType,
+  },
+  {
     label: 'Reports',
     path: '/reports',
     icon: 'AssessmentRounded' as unknown as ElementType,

@@ -8,6 +8,7 @@ const updateSchema = z.object({
   client_name: z.string().min(1).max(200).optional(),
   client_phone: z.string().max(50).nullable().optional(),
   client_email: z.string().email().max(200).nullable().optional(),
+  client_address: z.string().max(500).nullable().optional(),
   from_location: z.string().min(1).max(200).optional(),
   to_location: z.string().min(1).max(200).optional(),
   departure_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

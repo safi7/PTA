@@ -1,4 +1,4 @@
-# PTA — Passenger Travel Agency
+# PTA — Paktin Travel Agency
 
 Internal flight ticket management system for tracking bookings, finances, and generating sales reports.
 

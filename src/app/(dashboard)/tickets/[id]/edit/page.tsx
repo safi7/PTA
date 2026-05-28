@@ -31,7 +31,7 @@ export default function EditTicketPage({ params }: { params: Promise<{ id: strin
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    client_name: '', client_phone: '', client_email: '',
+    client_name: '', client_phone: '', client_email: '', client_address: '',
     from_location: '', to_location: '',
     departure_date: '', return_date: '', airline: '',
     original_price: '', sold_price: '', paid_amount: '',
@@ -49,6 +49,7 @@ export default function EditTicketPage({ params }: { params: Promise<{ id: strin
             client_name: data.client_name ?? '',
             client_phone: data.client_phone ?? '',
             client_email: data.client_email ?? '',
+            client_address: data.client_address ?? '',
             from_location: data.from_location ?? '',
             to_location: data.to_location ?? '',
             departure_date: data.departure_date ?? '',
@@ -85,6 +86,7 @@ export default function EditTicketPage({ params }: { params: Promise<{ id: strin
         client_name: form.client_name.trim(),
         client_phone: form.client_phone.trim() || null,
         client_email: form.client_email.trim() || null,
+        client_address: form.client_address.trim() || null,
         from_location: form.from_location.trim(),
         to_location: form.to_location.trim(),
         departure_date: form.departure_date,
@@ -144,6 +146,9 @@ export default function EditTicketPage({ params }: { params: Promise<{ id: strin
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <TextField label="Email" type="email" value={form.client_email} onChange={set('client_email')} fullWidth />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField label="Address (optional)" value={form.client_address} onChange={set('client_address')} fullWidth multiline rows={1} />
                   </Grid>
                 </Grid>
               </CardContent>
